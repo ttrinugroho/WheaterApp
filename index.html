@@ -1,11 +1,82 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Document</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="/assets/weather-icons.min.css">
+  <link rel="stylesheet" href="/assets/weather-icons-wind.min.css">
+  <link rel="stylesheet" href="/assets/style.css">
+  <script defer src="/assets/index.js"></script>
 </head>
+
 <body>
-  <h1>Hello word</h1>
+  <div class="container">
+    <div class="weather-card">
+      <div id="header">
+        <p style="color: #eb6e4b; font-size: 14px;">-</p>
+        <div style="font-size: 24px;">Select Your location</div>
+        <p style="color: #878787;">-</p>
+      </div>
+      <div class="weather-loaction">
+        <input type="text" placeholder="search by city" name="location" id="city">
+        <button class="btn-input">Search</button>
+        <button class="btn-coord"><i class="wi wi-wind-direction"></i></button>
+        <div class="notification">Set Your Location</div>
+      </div>
+      <div class="weather-temp">
+        <div class="temp">
+          <div class="weather-img">
+            <img data-v-3724b8e4="" alt="weater app" src="https://openweathermap.org/img/wn/10d@2x.png" class="weather-icon">
+          </div>
+          <p class="weather-suhu" style="font-size: 64px; margin: 0;">
+
+          </p>
+          <div class="detail-temp">
+
+          </div>
+        </div>
+
+        <div class="dayli">
+          <div class="day">
+            <p>&nbsp;</p>
+            <p>Temperature:</p>
+            <p>Feel Like:</p>
+          </div>
+          <div class="day">
+            <p>morning</p>
+            <p>-</p>
+            <p>-</p>
+          </div>
+          <div class="day">
+            <p>afternoon</p>
+            <p>-</p>
+            <p>-</p>
+          </div>
+          <div class="day">
+            <p>evening</p>
+            <p>-</p>
+            <p>-</p>
+          </div>
+          <div class="day">
+            <p>night</p>
+            <p>-</p>
+            <p>-</p>
+          </div>
+        </div>
+      </div>
+      <hr>
+      <div class="list-day">
+        <div class="card-day">
+          <p>Sunday</p>
+          <img src="https://openweathermap.org/img/wn/10d@2x.png">
+          <p><span>32°</span> <span style="color: #dfe1e5;">22°</span></p>
+        </div>
+      </div>
+    </div>
+  </div>
 </body>
+
 </html>
