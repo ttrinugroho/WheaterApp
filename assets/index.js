@@ -1,11 +1,12 @@
 const controlLogic = (function () {
   const key = "6cfcbdbb8a65937e16e331ce7b54a06e";
   const proxy = 'https://cors-anywhere.herokuapp.com/';
+  const API = 'http://api.openweathermap.org/data/2.5'
 
   async function getByCoord(lon, lat) {
     try {
       const result = await fetch(
-        `${proxy}http://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lon}&exclude=hourly,minutely&appid=${key}&lang=id&units=metric`
+        `${proxy}${API}/onecall?lat=${lat}&lon=${lon}&exclude=hourly,minutely&appid=${key}&lang=id&units=metric`
       );
       const data = await result.json();
       return data;
@@ -14,21 +15,11 @@ const controlLogic = (function () {
     }
   }
 
-  async function getByLonLat(lon = 55.5, lat = 37.5) {
+  async function getLocation(type, data) {
+    let query = await type === 'geo' ? `&lon=${data.lon}&lat=${data.lat}` : `q=${data.city}`
     try {
       const result = await fetch(
-        `${proxy}http://api.openweathermap.org/data/2.5/weather?lon=${lon}&lat=${lat}&appid=${key}&units=metric`);
-      const data = await result.json()
-      // const tomorrow = data.consolidated_weather[1];
-      return data;
-    } catch (error) {
-      alert(error);
-    }
-  }
-  async function getBySearch(city = 'london') {
-    try {
-      const result = await fetch(
-        `${proxy}http://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${key}&units=metric`);
+        `${proxy}${API}/weather?${query}&appid=${key}&units=metric`);
 
       if (result.status !== 200) {
         const notif = document.querySelector('.notification')
@@ -38,46 +29,41 @@ const controlLogic = (function () {
         return
       }
       const data = await result.json()
-      // const tomorrow = data.consolidated_weather[1];
       return data;
     } catch (error) {
       alert(error);
     }
   }
 
-  let data = {}
   return {
     getBySearch: async function (city) {
       let state = {}
-      let data = await getBySearch(city)
-      state = await { ...state, name: data.name, ...data.sys }
+      let data = await getLocation('city', { city: city })
       let store = await getByCoord(data.coord.lon, data.coord.lat)
-      state = await { ...state, ...store }
+      state = await { ...state, name: data.name, ...data.sys, ...store }
       return state
     },
     getByLonLat: async function (lon, lat) {
       let state = {}
-      let data = await getByLonLat(lon, lat)
-      state = await { ...state, name: data.name, ...data.sys }
+      let data = await getLocation('geo', { lon: lon, lat: lat })
       let store = await getByCoord(data.coord.lon, data.coord.lat)
-      state = await { ...state, ...store }
+      state = await { ...state, name: data.name, ...data.sys, ...store }
       return state
-    }
-    ,
-    getData: function () {
-      return data
     }
   }
 })();
 
 const controlUI = (function () {
-  const notification = document.querySelector('.notification')
-  const header = document.getElementById('header');
-  const suhu = document.querySelector('.weather-suhu');
-  const image = document.querySelector('.weather-icon');
-  const detail = document.querySelector('.detail-temp');
-  const dayli = document.querySelector('.dayli');
-  const listDay = document.querySelector('.list-day');
+  const querySelector = function (tag) {
+    return document.querySelector(tag)
+  }
+  const notification = querySelector('.notification')
+  const header = querySelector('#header');
+  const suhu = querySelector('.weather-suhu');
+  const image = querySelector('.weather-icon');
+  const detail = querySelector('.detail-temp');
+  const dayli = querySelector('.dayli');
+  const listDay = querySelector('.list-day');
 
   const notif = function (params = { message: 'Successful' }) {
     notification.textContent = params.message
@@ -110,7 +96,8 @@ const controlUI = (function () {
     suhu.innerHTML = `${data.temp.day}<sup style="font-size: 24px; color: #eb6e4b;">°C`
     image.src = `https://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png`
     detail.innerHTML = `<p><i class="wi wi-wind-direction"></i> ${data.wind_speed}m/s | <i class="wi wi-barometer"></i> ${data.pressure}hPa | <i class="wi wi-humidity"></i> ${data.humidity}% | UV: ${data.uvi} | <strong>Sunrise:</strong> ${timeDate(data.sunrise).hh}:${timeDate(data.sunrise).mm} | <strong>Sunset:</strong> ${timeDate(data.sunset).hh}:${timeDate(data.sunset).mm}</p>`
-    let dayParts = {
+    
+    const dayParts = {
       day: 'Afternoon',
       eve: 'Evening',
       morn: 'Morning',
@@ -127,6 +114,7 @@ const controlUI = (function () {
   const displayDaily = function (datas) {
     let data = [...datas]
     let strings = ''
+
     data.map(function (item, index) {
       strings = strings + `<div data-index=${index} class="card-day">
       <p>${timeDate(item.dt).day}</p>
@@ -139,6 +127,7 @@ const controlUI = (function () {
 
   const activeCard = function (indeks) {
     const cardDay = document.querySelectorAll('.card-day');
+    
     for (let i = 0; i < cardDay.length; i++) {
       if (cardDay[i].getAttribute('data-index') === indeks) {
         cardDay[i].classList.add('active')
@@ -147,10 +136,12 @@ const controlUI = (function () {
       }
     }
   }
+
   const displayUi = function (data) {
     let dataKota = { name: data.name, country: data.country }
     let dataDaily = [...data.daily]
     let dataSelected = dataDaily[0]
+
     displayHeader({ ...dataKota, weather: dataSelected.weather }, dataSelected.dt)
     displayDetail(dataSelected)
     displayDaily(dataDaily)
@@ -169,14 +160,16 @@ const controlUI = (function () {
 
   return {
     notif: notif,
-    displayUi: displayUi
+    displayUi: displayUi,
+    querySelector: querySelector
   }
 })();
 
 const appControl = (function (ui, logic) {
+
   const setEven = function () {
-    const btnLocation = document.querySelector('.btn-coord');
-    const btnInput = document.querySelector('.btn-input')
+    const btnLocation = ui.querySelector('.btn-coord');
+    const btnInput = ui.querySelector('.btn-input')
     btnLocation.addEventListener('click', setLocation)
     btnInput.addEventListener('click', setInput)
   }
@@ -196,7 +189,7 @@ const appControl = (function (ui, logic) {
     } else {
       const data = await logic.getBySearch(datas.message)
       const dataUI = ui.displayUi(data)
-      ui.notif({ message: 'Successful' })
+      ui.notif()
       changeDay(dataUI)
     }
   }
@@ -206,10 +199,11 @@ const appControl = (function (ui, logic) {
       ui.notif({ message: 'Geolocation is not supported by your browser' })
     } else {
       ui.notif({ message: 'Locating…' })
-      navigator.geolocation.getCurrentPosition(function (data) {
-        ui.notif()
-        getData("geo", data.coords)
-      },
+      navigator.geolocation.getCurrentPosition(
+        function (data) {
+          getData("geo", data.coords)
+          ui.notif()
+        },
         function (data) {
           ui.notif(data)
         })
@@ -220,8 +214,9 @@ const appControl = (function (ui, logic) {
     const inputVal = document.getElementById('city')
     if (inputVal.value !== "") {
       getData("city", { message: inputVal.value })
+    } else {
+      ui.notif({ message: "Must Be Filled Out" })
     }
-    ui.notif({ message: "Must Be Filled Out" })
   }
 
   return {
@@ -233,6 +228,5 @@ const appControl = (function (ui, logic) {
     }
   }
 })(controlUI, controlLogic);
-appControl.init()
 
-const key = "6cfcbdbb8a65937e16e331ce7b54a06e";
+appControl.init()
